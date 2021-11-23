@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="{{url_for('static',filename='css/main.css')}}">
+    <title>Hello</title>
+</head>
+<body>
+<h1>Добавление пользователя</h1>
+<form method="post">
+    <h4>Имя</h4>
+    <textarea name="name" id="name" ></textarea><br>
+    <h4>Фамилия</h4>
+    <textarea name="surname" id="surname" ></textarea><br>
+    <h4>Почта</h4>
+    <textarea name="email" id="email" ></textarea><br>
+    <input type="submit" value="Добавить">
+</form>
+</body>
+</html>

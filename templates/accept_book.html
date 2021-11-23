@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="{{url_for('static',filename='css/main.css')}}">
+    <title>Hello</title>
+</head>
+<body>
+<h1>Выдача книги</h1>
+<form method="post">
+    <h4>Книга</h4>
+    <select name="books" id="books">
+      {% for el in available_books %}
+        <option value="{{el.Title}}">{{el.Title}}</option>
+        {% endfor %}
+    </select>
+    <h4>Пользователь</h4>
+    <select name="users" id="users">
+        {% for el in available_user %}
+        <option value="{{el.Name}}">{{el.Name}}</option>
+        {% endfor %}
+    </select><br>
+    <input type="submit" value="Принять книгу">
+</form>
+</body>
+</html>

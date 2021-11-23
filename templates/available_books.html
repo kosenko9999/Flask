@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="{{url_for('static',filename='css/main.css')}}">
+    <title>Hello</title>
+</head>
+<body>
+<h1>Список книг</h1>
+{% for el in available_books %}
+<div>
+    <h2>{{el.Title}}</h2>
+    <p>Доступность: {{el.Available}}</p><br>
+</div>
+{% endfor %}
+</body>
+</html>
