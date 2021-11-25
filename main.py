@@ -1,30 +1,25 @@
-from flask import Flask, render_template, url_for, request, redirect
+from flask import Flask, render_template, url_for, request, redirect, send_file
 from flask_sqlalchemy import SQLAlchemy
+
 from datetime import datetime
+import json
 
 app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///test.db"
 db = SQLAlchemy(app)
 
 
-class Mylibrary(db.Model):
+class Users(db.Model):
     id_user = db.Column(db.Integer, primary_key=True)
     Name = db.Column(db.String(100), nullable=False)
     Surname = db.Column(db.String(100), nullable=False)
     Email = db.Column(db.String(100), nullable=False)
-
-    def __repr__(self):
-        return '<Mylibrary %r>' % self.title
 
 
 class Books(db.Model):
     id_book = db.Column(db.Integer, primary_key=True)
     Title = db.Column(db.String(100), nullable=False)
     Author = db.Column(db.String(100), nullable=False)
-    Available = db.Column(db.String(100))
-
-    #def __repr__(self):
-        #return '<Books %r>' % self.Title
 
 
 class Log(db.Model):
@@ -33,39 +28,25 @@ class Log(db.Model):
     id_user = db.Column(db.String(100), nullable=False)
     action = db.Column(db.String(100))
 
-    def __init__(self, id_book, id_user,action):
-        self.id_book = id_book
-        self.id_user = id_user
-        self.action = action
-
 
 @app.route("/")
-def hello_world():
+def main_page():
     return render_template("index.html")
-
-
-@app.route("/list_users")
-def books():
-    list_user = Mylibrary.query.first()
-    return render_template("list_users.html", list_user=list_user)
 
 
 @app.route("/add_user", methods=["POST", "GET"])
 def add_user():
     if request.method == "POST":
-        Name = request.form["name"]
-        Surname = request.form["surname"]
-        Email = request.form["email"]
-
-        user = Mylibrary(Name=Name, Surname=Surname, Email=Email)
-
+        name = request.form["name"]
+        surname = request.form["surname"]
+        email = request.form["email"]
+        user = Users(Name=name, Surname=surname, Email=email)
         try:
             db.session.add(user)
             db.session.commit()
         except Exception as e:
             print(e)
             return "При добавление пользователя произошла ошибка"
-
         return redirect("/")
     else:
         return render_template("add_user.html")
@@ -74,33 +55,24 @@ def add_user():
 @app.route("/add_book", methods=["POST", "GET"])
 def add_book():
     if request.method == "POST":
-        Author = request.form["author"]
-        Title = request.form["title"]
-        book = Books(Author=Author, Title=Title, Available=True)
-
+        author = request.form["author"]
+        title = request.form["title"]
+        book = Books(Author=author, Title=title)
         try:
             db.session.add(book)
             db.session.commit()
         except Exception as e:
             print(e)
-            return "При добавление пользователя произошла ошибка"
-
+            return "При добавление книги произошла ошибка"
         return redirect("/")
     else:
         return render_template("add_book.html")
 
 
-@app.route("/available_books")
-def show_available_books():
-    available_books = Books.query.all()
-    print(available_books)
-    return render_template("available_books.html", available_books=available_books)
-
-
 @app.route("/give_book", methods=["POST", "GET"])
 def give_books():
     all_books = Books.query.all()
-    available_user = Mylibrary.query.all()
+    available_user = Users.query.all()
     available_books = []
 
     for each in all_books:
@@ -115,39 +87,78 @@ def give_books():
         book = request.form["books"]
         user = request.form["users"]
         record = Log(id_book=book, id_user=user, action="Given")
-        print(book)
         try:
             db.session.add(record)
             db.session.commit()
         except Exception as e:
             print(e)
             return "При выдачи книги произошла ошибка"
-
         return redirect("/")
     else:
-        return render_template("give_book.html", available_books =available_books,  available_user=available_user)
+        return render_template("give_book.html", available_books=available_books,  available_user=available_user)
+
+
+@app.route("/download")
+def download_file():
+    test = {'test_key': 'value_test'}
+    with open('test_file.json', 'w') as file:
+        json.dump(test, file, indent=4)
+
+    return send_file('test_file.json', as_attachment=True)
 
 
 @app.route("/accept_book", methods=["POST", "GET"])
 def accept_books():
     available_books = Books.query.all()
-    available_user = Mylibrary.query.all()
+    available_user = Users.query.all()
     if request.method == "POST":
         book = request.form["books"]
         user = request.form["users"]
-
         record = Log(id_book=book, id_user=user, action="Returned")
-
         try:
             db.session.add(record)
             db.session.commit()
         except Exception as e:
             print(e)
-            return "При выдачи книги произошла ошибка"
+            return "При возрате книги произошла ошибка"
 
         return redirect("/")
     else:
         return render_template("accept_book.html", available_books=available_books, available_user=available_user)
+
+
+@app.route("/log_given_book", methods=["POST", "GET"])
+def log_given_book():
+    available_user = Users.query.all()
+    if request.method == "POST":
+        user = request.form.get("users")
+        end_date = request.form["end"]
+        start_date = request.form["start"]
+        table_given_books = Log.query.filter_by(id_user=user).filter_by(action="Given").filter(Log.date_action > start_date).filter(Log.date_action < end_date).order_by(
+            Log.date_action.desc()).all()
+        try:
+            return render_template("log_given_book.html", table_given_books=table_given_books, available_user=available_user)
+        except Exception as e:
+            return "При формировании журнала была ошибка"
+    else:
+        return render_template("log_given_book.html",  available_user=available_user)
+
+
+@app.route("/log_returned_book", methods=["POST", "GET"])
+def log_returned_book():
+    available_user = Users.query.all()
+    if request.method == "POST":
+        user = request.form.get("users")
+        end_date = request.form["end"]
+        start_date = request.form["start"]
+        table_given_books = Log.query.filter_by(id_user=user).filter_by(action="Returned").filter(Log.date_action > start_date).filter(Log.date_action < end_date).order_by(
+            Log.date_action.desc()).all()
+        try:
+            return render_template("log_returned_book.html", table_given_books=table_given_books, available_user=available_user)
+        except Exception as e:
+            return "При формировании журнала была ошибка"
+    else:
+        return render_template("log_returned_book.html",  available_user=available_user)
 
 
 app.run(debug=True)
