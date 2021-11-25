@@ -26,6 +26,7 @@ class Log(db.Model):
     id_book = db.Column(db.Integer, primary_key=True)
     date_action = db.Column(db.DateTime, default=datetime.utcnow)
     id_user = db.Column(db.String(100), nullable=False)
+    Title = db.Column(db.String(100), nullable=False)
     action = db.Column(db.String(100))
 
 
@@ -76,7 +77,7 @@ def give_books():
     available_books = []
 
     for each in all_books:
-        test = Log.query.filter_by(id_book=each.Title).order_by(Log.date_action.desc()).first()
+        test = Log.query.filter_by(id_book=each.id_book).order_by(Log.date_action.desc()).first()
         if test is None:
             available_books.append(each)
         elif test.action == "Returned":
@@ -86,7 +87,10 @@ def give_books():
     if request.method == "POST":
         book = request.form["books"]
         user = request.form["users"]
-        record = Log(id_book=book, id_user=user, action="Given")
+        id_book = Books.query.filter_by(Title=book).first()
+        print(id_book)
+        print(id_book.id_book)
+        record = Log(id_book=id_book.id_book, id_user=user, Title=book,  action="Given")
         try:
             db.session.add(record)
             db.session.commit()
@@ -98,23 +102,16 @@ def give_books():
         return render_template("give_book.html", available_books=available_books,  available_user=available_user)
 
 
-@app.route("/download")
-def download_file():
-    test = {'test_key': 'value_test'}
-    with open('test_file.json', 'w') as file:
-        json.dump(test, file, indent=4)
-
-    return send_file('test_file.json', as_attachment=True)
-
-
 @app.route("/accept_book", methods=["POST", "GET"])
 def accept_books():
     available_books = Books.query.all()
     available_user = Users.query.all()
+
     if request.method == "POST":
         book = request.form["books"]
         user = request.form["users"]
-        record = Log(id_book=book, id_user=user, action="Returned")
+        id_book = Books.query.filter_by(Title=book).first()
+        record = Log(id_book=id_book.id_book, id_user=user, Title=book, action="Returned")
         try:
             db.session.add(record)
             db.session.commit()
@@ -159,6 +156,14 @@ def log_returned_book():
             return "При формировании журнала была ошибка"
     else:
         return render_template("log_returned_book.html",  available_user=available_user)
+
+
+@app.route("/download")
+def download_file():
+    test = {'test_key': 'value_test'}
+    with open('test_file.json', 'w') as file:
+        json.dump(test, file, indent=4)
+    return send_file('test_file.json', as_attachment=True)
 
 
 app.run(debug=True)
