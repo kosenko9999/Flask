@@ -1,9 +1,13 @@
 import csv
 import io
-from flask import Flask, render_template, url_for, request, redirect, send_file,session
+from flask import Flask, render_template, url_for, request, redirect, send_file, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime, timedelta, date
 import json
+import pandas as pd
+from pandas import Series, DataFrame
+import pandas.io.sql as sql
+import sqlite3
 
 app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///test.db"
@@ -49,183 +53,39 @@ def main_page():
     return render_template("index.html")
 
 
-@app.route("/add_user", methods=["POST", "GET"])
+@app.route("/reports", methods=["GET", "POST"])
+def report_page():
+    return render_template("report.html")
+
+
+@app.route("/add_user", methods=["GET", "POST"])
 def add_user():
-    if request.method == "POST":
-        name = request.form["name"]
-        surname = request.form["surname"]
-        email = request.form["email"]
-        user = Users(Name=name, Surname=surname, Email=email)
-        try:
-            db.session.add(user)
-            db.session.commit()
-        except Exception as e:
-            print(e)
-            return "При добавление пользователя произошла ошибка"
-        return redirect("/")
-    else:
-        return render_template("add_user.html")
+    return render_template("add_user.html")
 
 
-@app.route("/add_book", methods=["POST", "GET"])
+@app.route("/add_book", methods=["GET", "POST"])
 def add_book():
-    if request.method == "POST":
-        author = request.form["author"]
-        title = request.form["title"]
-        book = Books(Author=author, Title=title)
-        try:
-            db.session.add(book)
-            db.session.commit()
-        except Exception as e:
-            print(e)
-            return "При добавление книги произошла ошибка"
-        return redirect("/")
-    else:
-        return render_template("add_book.html")
+    return render_template("add_book.html")
 
 
 @app.route("/give_book", methods=["POST", "GET"])
 def give_books():
-    all_books = Books.query.all()
-    available_user = Users.query.all()
-    available_books = []
-
-    for each in all_books:
-        test = Log.query.filter_by(id_book=each.id_book).order_by(Log.date_action.desc()).first()
-        if test is None:
-            available_books.append(each)
-        elif test.action == "Returned":
-            available_books.append(each)
-    print(available_books)
-
-    if request.method == "POST":
-        book = request.form["books"]
-        user = request.form["users"]
-        id_book = Books.query.filter_by(Title=book).first()
-        print(id_book)
-        print(id_book.id_book)
-        record = Log(id_book=id_book.id_book, id_user=user, Title=book,  action="Given")
-        try:
-            db.session.add(record)
-            db.session.commit()
-        except Exception as e:
-            print(e)
-            return "При выдачи книги произошла ошибка"
-        return redirect("/")
-    else:
-        return render_template("give_book.html", available_books=available_books,  available_user=available_user)
+    return render_template("give_book.html")
 
 
 @app.route("/accept_book", methods=["POST", "GET"])
 def accept_books():
-    available_books = Books.query.all()
-    available_user = Users.query.all()
-
-    if request.method == "POST":
-        book = request.form["books"]
-        user = request.form["users"]
-        id_book = Books.query.filter_by(Title=book).first()
-        record = Log(id_book=id_book.id_book, id_user=user, Title=book, action="Returned")
-        try:
-            db.session.add(record)
-            db.session.commit()
-        except Exception as e:
-            print(e)
-            return "При возрате книги произошла ошибка"
-
-        return redirect("/")
-    else:
-        return render_template("accept_book.html", available_books=available_books, available_user=available_user)
+    return render_template("accept_book.html")
 
 
 @app.route("/log_given_book", methods=["POST", "GET"])
 def log_given_book():
-    available_user = Users.query.all()
-    current_user = 214
-    start_date = "1901-01-01"
-    end_date = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d")
-    type_of_log = "Given"
-    if request.method == "POST":
-        current_user = request.form.get("users")
-        end_date = request.form["end"]
-        start_date = request.form["start"]
-        table_given_books = get_table_log(current_user, type_of_log, start_date, end_date)
-        try:
-            return render_template("log_given_book.html", table_given_books=table_given_books,
-                                   available_user=available_user, current_user=current_user, start_date=start_date,
-                                   end_date=end_date, type_of_log=type_of_log)
-        except Exception as e:
-            return "При формировании журнала была ошибка"
-    else:
-        table_given_books = get_table_log(current_user, type_of_log, start_date, end_date)
-        return render_template("log_given_book.html", table_given_books=table_given_books, current_user=current_user,
-                               available_user=available_user, start_date=start_date, end_date=end_date,
-                               type_of_log=type_of_log)
+    return render_template("log_given_book.html")
 
 
 @app.route("/log_returned_book", methods=["POST", "GET"])
 def log_returned_book():
-    available_user = Users.query.all()
-    current_user = 214
-    start_date = "1901-01-01"
-    end_date = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d")
-    type_of_log = "Returned"
-    if request.method == "POST":
-        current_user = request.form.get("users")
-        end_date = request.form["end"]
-        start_date = request.form["start"]
-        table_given_books = get_table_log(current_user, type_of_log, start_date, end_date)
-        try:
-            return render_template("log_returned_book.html", table_given_books=table_given_books,
-                                   available_user=available_user, current_user=current_user, start_date=start_date,
-                                   end_date=end_date, type_of_log=type_of_log)
-        except Exception as e:
-            return "При формировании журнала была ошибка"
-    else:
-        table_given_books = get_table_log(current_user, type_of_log, start_date, end_date)
-        return render_template("log_returned_book.html", table_given_books=table_given_books, current_user=current_user,
-                               available_user=available_user, start_date=start_date, end_date=end_date,
-                               type_of_log=type_of_log)
-
-
-@app.route("/download", methods=["POST"])
-def download_file():
-    format_data = request.form.get("format_downloaded_file")
-    current_user = request.form.get("users")
-    end_date = request.form["end"]
-    start_date = request.form["start"]
-    type_of_log = request.form["type_of_log"]
-    print(type_of_log)
-    table_given_books = get_table_log(current_user, type_of_log, start_date, end_date)
-    data_for_download = table_given_books[0:15]
-    if format_data == "JSON":
-        json_list = []
-        for each in data_for_download:
-            # Формируем данные для json
-            dict_data = {"id_book": each.id_book, "id_user": each.id_user, "Title": each.Title, "action": each.action}
-            json_list.append(dict_data)
-        with open('test_file.json', 'w', encoding="utf-8") as file:
-            json.dump(json_list, file, indent=4)
-        return send_file('test_file.json', as_attachment=True)
-    else:
-        # Формируем данные для CSV
-        with open('test_file.csv', 'w', encoding="utf-8", newline='') as file:
-            header = []
-            counter = 0
-            file_writer = csv.DictWriter(file, delimiter=',', fieldnames=header)
-            for each in data_for_download:
-                print(each)
-                # Получаем список ключей
-                if counter == 0:
-                    for i in each.__dict__.keys():
-                        if i != "_sa_instance_state":
-                            header.append(i)
-                        else:
-                            continue
-                    counter += 1
-                    file_writer.writeheader()
-                file_writer.writerow({"id_book": each.id_book, "date_action": each.date_action, "id_user": each.id_user, "Title": each.Title, "action": each.action})
-        return send_file('test_file.csv', as_attachment=True)
+    return render_template("log_returned_book.html")
 
 
 @app.route("/upload", methods=["POST"])
@@ -233,7 +93,7 @@ def upload():
     available_user = Users.query.all()
     upload_format = request.form.get("format_uploaded_file")
     print("Формат " + upload_format)
-    if request.files:
+    if request.files["uploaded_file"]:
         file = request.files["uploaded_file"]
         stream = io.StringIO(file.read().decode("UTF8"), newline=None)
 
@@ -261,5 +121,281 @@ def upload():
                     print(e)
                     return "При добавление пользователя произошла ошибка"
         return redirect("/log_given_book")
+
+
+@app.route('/api/books/<int:id_book>', methods=['GET'])
+def get_book(id_book):
+    books = Books.query.filter_by(id_book=id_book)
+    serialized = []
+    for each in books:
+        serialized.append({
+            "id_book": each.id_book,
+            "Author": each.Author,
+            "Title": each.Title,
+        })
+    return jsonify(serialized)
+
+
+@app.route('/api/books', methods=['POST'])
+def add_new_book():
+    new_request = request.json
+    author = new_request["Author"]
+    title = new_request["Title"]
+    existing_book = Books.query.filter_by(Author=author).filter_by(Title=title).first()
+    if existing_book is None:
+        book = Books(Author=author, Title=title)
+        try:
+            db.session.add(book)
+            db.session.commit()
+        except Exception as e:
+            print(e)
+        books = Books.query.filter_by(Author=author).filter_by(Title=title)
+        serialized = []
+        for each in books:
+            serialized.append({
+                # "id_book": each.id_book,
+                "Author": each.Author,
+                "Title": each.Title,
+            })
+        return jsonify(serialized), 200
+    else:
+        return f"books {title} already exist", 400
+
+
+@app.route('/api/users/<int:id_user>', methods=['GET'])
+def get_user(id_book):
+    books = Books.query.filter_by(id_book=id_book)
+    serialized = []
+    for each in books:
+        serialized.append({
+            "id_book": each.id_book,
+            "Author": each.Author,
+            "Title": each.Title,
+        })
+    return jsonify(serialized)
+
+
+@app.route('/api/users', methods=['POST'])
+def add_new_user():
+    new_request = request.json
+    name = new_request["Name"]
+    surname = new_request["Surname"]
+    email = new_request["Email"]
+    print(name)
+    print(surname)
+    existing_users = Users.query.filter_by(Name=name).filter_by(Surname=surname).filter_by(Email=email).first()
+    print(existing_users)
+    if existing_users is None:
+        user = Users(Name=name, Surname=surname, Email=email)
+        try:
+            db.session.add(user)
+            db.session.commit()
+        except Exception as e:
+            print(e)
+            return "При добавление пользователя произошла ошибка"
+        users = Users.query.filter_by(Name=name).filter_by(Surname=surname).filter_by(Email=email)
+        print(users)
+        serialized = []
+        for each in users:
+            serialized.append({
+                # "id_user": each.id_user,
+                "Name": each.Name,
+                "Surname": each.Surname,
+                "Email": each.Email
+            })
+        return jsonify(serialized), 200
+    else:
+        return f"user {name} {surname} already exist", 400
+
+
+@app.route('/api/log/book/given/<int:id_user>', methods=['GET'])
+def get_log_given_books(id_user):
+    given_books = get_table_log(id_user, "Given", request.args.get("start_date"), request.args.get("end_date"))
+    serialized = []
+    for each in given_books:
+        serialized.append({
+            "id_book": each.id_book,
+            "date_action": each.date_action,
+            "id_user": each.id_user,
+            "action": each.action,
+            "Title": each.Title,
+            "id_log": each.id_log
+        })
+    return jsonify(serialized)
+
+# Клиенту была выдана книга
+@app.route('/api/log/book/given/<int:id_user>', methods=['POST'])
+def give_book_user(id_user):
+    book = request.args.get("book_title")
+    user = id_user
+    id_book = Books.query.filter_by(Title=book).first()
+    record = Log(id_book=id_book.id_book, id_user=user, Title=book, action="Given")
+    try:
+        db.session.add(record)
+        db.session.commit()
+    except Exception as e:
+        print(e)
+    return "При выдачи книги произошла ошибка"
+    given_book = Log.query.filter_by(action="Given")
+    serialized = []
+    for each in given_books:
+        serialized.append({
+            "id_book": each.id_book,
+            "date_action": each.date_action,
+            "id_user": each.id_user,
+            "action": each.action,
+            "Title": each.Title,
+            "id_log": each.id_log
+        })
+    return jsonify(serialized)
+
+
+# Клиент отдал книгу
+@app.route('/api/log/book/returned/<int:id_user>', methods=['POST'])
+def accept_book_user(id_user):
+    book = request.args.get("book_title")
+    user = id_user
+    id_book = Books.query.filter_by(Title=book).first()
+    record = Log(id_book=id_book.id_book, id_user=user, Title=book, action="Returned")
+    try:
+        db.session.add(record)
+        db.session.commit()
+    except Exception as e:
+        print(e)
+    return "При выдачи книги произошла ошибка"
+    given_book = Log.query.filter_by(action="Returned")
+    serialized = []
+    for each in given_books:
+        serialized.append({
+            "id_book": each.id_book,
+            "date_action": each.date_action,
+            "id_user": each.id_user,
+            "action": each.action,
+            "Title": each.Title,
+            "id_log": each.id_log
+        })
+    return jsonify(serialized)
+
+
+@app.route('/api/log/returned_book/<int:id_user>', methods=['GET'])
+def get_log_returned_books(id_user):
+    returned_books = get_table_log(id_user, "Returned", request.args.get("start_date"), request.args.get("end_date"))
+    serialized = []
+    for each in returned_books:
+        serialized.append({
+            "id_book": each.id_book,
+            "date_action": each.date_action,
+            "id_user": each.id_user,
+            "action": each.action,
+            "Title": each.Title,
+            "id_log": each.id_log
+        })
+    return jsonify(serialized)
+
+
+# Получение списка доступных книг
+@app.route('/api/log/available_book', methods=['GET'])
+def get_available_books():
+    all_books = Books.query.all()
+    available_books = []
+    for each in all_books:
+        test = Log.query.filter_by(id_book=each.id_book).order_by(Log.date_action.desc()).first()
+        if test is None:
+            available_books.append(each)
+        elif test.action == "Returned":
+            available_books.append(each)
+    print(available_books)
+    serialized = []
+    for each in available_books:
+        serialized.append({
+            "id_book": each.id_book,
+            "Author": each.Author,
+            "Title": each.Title
+        })
+    return jsonify(serialized)
+
+
+@app.route('/api/log/returned/available_book', methods=['GET'])
+def get_available_for_returning_book():
+    all_books = Books.query.all()
+    serialized = []
+    for each in all_books:
+        serialized.append({
+            "id_book": each.id_book,
+            "Author": each.Author,
+            "Title": each.Title
+        })
+    return jsonify(serialized)
+
+
+# Получение списка всех пользователей
+@app.route('/api/log/users/all', methods=['GET'])
+def get_all_users():
+    all_users = Users.query.all()
+    serialized = []
+    for each in all_users:
+        serialized.append({
+            "id_user": each.id_user,
+            "Name": each.Name,
+            "Surname": each.Surname,
+            "Email": each.Email
+        })
+    return jsonify(serialized)
+
+
+# Получение айди book по Title
+@app.route('/api/books/id', methods=['GET'])
+def get_id_book():
+    title = request.args.get("book_title")
+    book = Books.query.filter_by(Title=title).first()
+    if book is None:
+        return "Book not found", 400
+    else:
+        serialized = {"id_book": book.id_book}
+        return jsonify(serialized), 200
+
+
+# Cтатистика кто больше всех вернул книг
+@app.route('/api/reports/users/given', methods=['GET'])
+def report_given_books_by_users():
+    conn = sqlite3.connect("test.db")
+    dframe = sql.read_sql("SELECT * FROM Log where date_action > '" + request.args.get("start_date")
+                                      + "' and date_action < '" + request.args.get("end_date")+"'", conn)
+    frame_given = dframe.loc[dframe['action'] == "Given"]
+    grouped_given = frame_given["action"].groupby(frame_given["id_user"]).count()
+    #grouped_returned = frame_given["action"].groupby(frame_given["id_user"]).count()
+    print(grouped_given)
+    result = grouped_given.to_json()
+    parsed = json.loads(result)
+    serialized = []
+    for key, value in parsed.items():
+        serialized.append({
+            "id_user": key,
+            "count": value
+        })
+    return jsonify(serialized), 200
+
+
+# Cтатистика кто больше всех вернул книг
+@app.route('/api/reports/users/returned', methods=['GET'])
+def report_returned_books_by_users():
+    filter_column = request.args.get("filter_column")
+    isascending = request.args.get("isascending")
+    conn = sqlite3.connect("test.db")
+    dframe = sql.read_sql("SELECT Name,Surname,date_action,a.id_user as id_user,action,Title,"
+                          "id_log FROM Log a join Users b on a.id_user = b.id_user  where date_action > '" + request.args.get("start_date")
+                          + "' and date_action < '" + request.args.get("end_date") + "'", conn)
+
+    grouped_given = dframe.groupby(["id_user", "Name", "Surname"], as_index=False)["action"].apply(lambda x: x[x == 'Given'].count())
+    grouped_given.rename(columns={'action': 'count_given_book'}, inplace=True)
+
+    grouped_returned = dframe.groupby(["id_user", "Name", "Surname"], as_index=False)["action"].apply(lambda x: x[x == 'Returned'].count())
+    grouped_returned.rename(columns={'action': 'count_returned_book'}, inplace=True)
+    grouped_returned["count_given_book"] = grouped_given["count_given_book"]
+    sorted_dataframe = grouped_returned.sort_values(by=filter_column, ascending=eval(isascending))
+    print(sorted_dataframe)
+    result = sorted_dataframe.to_json(orient="records")
+    return jsonify(json.loads(result))
+
 
 app.run(debug=True)

@@ -4,15 +4,32 @@
     <meta charset="UTF-8">
     <link rel="stylesheet" href="{{url_for('static',filename='css/main.css')}}">
     <title>Hello</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<!--    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-bootgrid/1.3.1/jquery.bootgrid.css" integrity="sha512-CF1ovh2vRt2kC4JJ/Hl7VC7a+tu/NTO8iW+iltdfvIjvsb45t/6NkRNSrOe6HBxCTVplYLHW5GdlbtRLlCUp2A==" crossorigin="anonymous" referrerpolicy="no-referrer" />-->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-bootgrid/1.3.1/jquery.bootgrid.min.js" integrity="sha512-ut+jq2MDKjyWKK7rpEbyHjJ2kDBDO58DLFw4xJobqvS2kUgx4DJbj3OLjwk4F0pKtcxUoUIRS6esQVhh4fmWNA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 </head>
 <body>
 <h1>Добавление новой книги</h1>
-<form method="post">
+<form>
     <h4>Автор</h4>
     <textarea name="author" id="author" ></textarea><br>
     <h4>Название</h4>
     <textarea name="title" id="title" ></textarea><br>
-    <input type="submit" value="Добавить">
+    <input type="submit" id="book_add" value="Добавить">
 </form>
+
+<script type=text/javascript>
+$("#book_add").click(function(){
+   var $author = $('#author');
+   var $title = $('#title');
+ $.ajaxSetup({
+  contentType: "application/json; charset=utf-8"
+});
+   $.post( '/api/books', JSON.stringify({ "Author": $author.val(), "Title": $title.val()}))
+          .done(function( data ) {alert( "Data Loaded: " + data )});
+   });
+</script>
+
 </body>
 </html>

@@ -4,23 +4,66 @@
     <meta charset="UTF-8">
     <link rel="stylesheet" href="{{url_for('static',filename='css/main.css')}}">
     <title>Hello</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<!--    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-bootgrid/1.3.1/jquery.bootgrid.css" integrity="sha512-CF1ovh2vRt2kC4JJ/Hl7VC7a+tu/NTO8iW+iltdfvIjvsb45t/6NkRNSrOe6HBxCTVplYLHW5GdlbtRLlCUp2A==" crossorigin="anonymous" referrerpolicy="no-referrer" />-->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-bootgrid/1.3.1/jquery.bootgrid.min.js" integrity="sha512-ut+jq2MDKjyWKK7rpEbyHjJ2kDBDO58DLFw4xJobqvS2kUgx4DJbj3OLjwk4F0pKtcxUoUIRS6esQVhh4fmWNA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 </head>
 <body>
 <h1>Выдача книги</h1>
+<br>
 <form method="post">
     <h4>Книга</h4>
     <select name="books" id="books">
-      {% for el in available_books %}
-        <option value="{{el.Title}}">{{el.Title}}</option>
-        {% endfor %}
     </select>
+    <br>
     <h4>Пользователь</h4>
     <select name="users" id="users">
-        {% for el in available_user %}
-        <option value="{{el.Name}}">{{el.Name}}</option>
-        {% endfor %}
     </select><br>
-    <input type="submit" value="Выдать книгу">
+    <input type="submit" value="Выдать книгу" id="give_book">
 </form>
+
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
+<script type=text/javascript>
+var $av_books = $('#books');
+var $all_users = $('#users');
+$(function(){
+$.ajax({
+    type: "GET",
+    url: "/api/log/available_book",
+    success: function(books){
+      $.each(books, function(i, available_book){
+           $av_books.append('<option value='+available_book.id_book+'>'+available_book.Title+'</option>');
+       })
+    }
+});
+
+$.ajax({
+    type: "GET",
+    url: "/api/log/users/all",
+    success: function(users){
+      $.each(users, function(i, all_user){
+           $all_users.append('<option value='+all_user.id_user+'>'+all_user.Name+'</option>');
+       })
+    }
+});
+
+$( document ).ready(function() {
+console.log( "document loaded" );
+$("#give_book").click(function(){
+ var $current_user=$all_users.val();
+ var $current_books=$av_books.val();
+ $.ajaxSetup({
+  contentType: "application/json; charset=utf-8"
+});
+$current_user=$all_users.val();
+$current_books=$av_books.find(":selected").text(); ;
+$.post( '/api/log/book/given/'+$current_user+'?book_title='+$current_books)
+    .done(function( data ) {alert( "Data Loaded: " + data )});
+ });
+});
+});
+</script>
 </body>
 </html>

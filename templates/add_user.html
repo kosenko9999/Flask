@@ -4,17 +4,34 @@
     <meta charset="UTF-8">
     <link rel="stylesheet" href="{{url_for('static',filename='css/main.css')}}">
     <title>Hello</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<!--    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-bootgrid/1.3.1/jquery.bootgrid.css" integrity="sha512-CF1ovh2vRt2kC4JJ/Hl7VC7a+tu/NTO8iW+iltdfvIjvsb45t/6NkRNSrOe6HBxCTVplYLHW5GdlbtRLlCUp2A==" crossorigin="anonymous" referrerpolicy="no-referrer" />-->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-bootgrid/1.3.1/jquery.bootgrid.min.js" integrity="sha512-ut+jq2MDKjyWKK7rpEbyHjJ2kDBDO58DLFw4xJobqvS2kUgx4DJbj3OLjwk4F0pKtcxUoUIRS6esQVhh4fmWNA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 </head>
 <body>
 <h1>Добавление пользователя</h1>
-<form method="post">
+<form >
     <h4>Имя</h4>
     <textarea name="name" id="name" ></textarea><br>
     <h4>Фамилия</h4>
     <textarea name="surname" id="surname" ></textarea><br>
     <h4>Почта</h4>
     <textarea name="email" id="email" ></textarea><br>
-    <input type="submit" value="Добавить">
+    <input type="submit" value="Добавить" id="user_add">
 </form>
+<script type=text/javascript>
+$("#user_add").click(function(){
+   var $name = $('#name');
+   var $surname = $('#surname');
+   var $email = $('#email');
+ $.ajaxSetup({
+  contentType: "application/json; charset=utf-8"
+});
+
+   $.post( '/api/users', JSON.stringify({ "Name": $name.val(), "Surname": $surname.val(), "Email": $email.val()}))
+          .done(function( data ) {alert( "Data Loaded: " + data )});
+   });
+</script>
 </body>
 </html>
