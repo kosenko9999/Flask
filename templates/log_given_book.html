@@ -1,73 +1,55 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <!-- Required meta tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <!--    <link rel="stylesheet" href="{{url_for('static',filename='css/main.css')}}">-->
-    <title>Hello</title>
-     <!--    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">-->
-      <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.0/FileSaver.min.js"></script>
-
-      <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css" rel="stylesheet">
-      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/TableExport/5.2.0/css/tableexport.css" />
-      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/TableExport/5.2.0/css/tableexport.css" />
-
-      <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.0.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.0/FileSaver.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/TableExport/5.2.0/css/tableexport.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/TableExport/5.2.0/css/tableexport.css" />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.0.0/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-bootgrid/1.3.1/jquery.bootgrid.min.js" ></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/TableExport/5.2.0/js/tableexport.min.js" ></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-bootgrid/1.3.1/jquery.bootgrid.css"/>
-      <script src="https://cdn.datatables.net/1.11.3/js/jquery.dataTables.min.js"></script>
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.11.2/umd/popper.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.3/js/jquery.dataTables.min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.11.2/umd/popper.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/datatables/1.10.19/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/buttons/2.1.0/js/dataTables.buttons.min.js"></script>
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
-      <script src="https://cdn.datatables.net/buttons/2.1.0/js/buttons.html5.min.js"></script>
-      <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.5/xlsx.min.js" ></script>
-
-
-<!--	<script src="table-to-csv.min.js"></script>-->
-
-
-    <!-- Bootstrap CSS -->
-
-    <title>Hello, world!</title>
+	  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.1.0/js/buttons.html5.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.5/xlsx.min.js" ></script>
+    <title>Log given books</title>
   </head>
-  <body>
+<body>
   <h1>Журнал выдачи книги</h1>
-<form method="post">
-    <label for="start">Начало:</label>
-    <input type="date" id="start" name="start"
-       min="1900-01-01" max="2099-12-31" value=2022-01-01>
-    <label for="start">Конец:</label>
-    <input type="date" id="end" name="end"
-       min="1900-01-01" max="2099-12-31" value=2022-01-15>
-    <br>
-    <label for="users">Пользователь:</label>
-    <select name="users" id="users">
-    </select>
-    <br>
-</form>
+  <form method="post">
+      <label for="start">Начало:</label>
+      <input type="date" id="start" name="start"
+         min="1900-01-01" max="2099-12-31" value=2022-01-01>
+      <label for="start">Конец:</label>
+      <input type="date" id="end" name="end"
+         min="1900-01-01" max="2099-12-31" value=2022-01-15>
+      <br>
+      <label for="users">Пользователь:</label>
+      <select name="users" id="users">
+      </select>
+      <br>
+  </form>
 <br>
 <br>
 <table id="given_book" class="table table-condensed table-hover table-striped" data-toggle="bootgrid" >
-<thead><tr>
-    <th data-column-id="Title">Название книги</th>
-    <th data-column-id="action">Действие</th>
-    <th data-column-id="date_action">Дата выдачи</th>
-    <th data-column-id="id_book">ИД книги</th>
-    <th data-column-id="id_user">Ид пользователя</th>
-
+<thead>
+<tr>
+  <th data-column-id="Title">Название книги</th>
+  <th data-column-id="action">Действие</th>
+  <th data-column-id="date_action">Дата выдачи</th>
+  <th data-column-id="id_book">ИД книги</th>
+  <th data-column-id="id_user">Ид пользователя</th>
 </tr>
 </thead>
     <tbody>
-
 </tbody>
 </table>
-
-
-
-
 <br>
 <h5>Выгрузка Json Данных</h5>
   <button  id="json_button">JSON</button>
@@ -95,39 +77,21 @@
       </form>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
 
-  <script type=text/javascript>
+<script type=text/javascript>
+var $current_user =$('#users');
+var $start_date = $('#start');
+var $end_date = $('#end');
+var t = $('#given_book').DataTable();
+var table = $('#given_book').tableExport();
 
 
-
-$( document ).ready(function() {
-console.log( "document loaded" );
-var t = $('#given_book').DataTable()
-var table = $('#given_book').tableExport()
-var $all_users = $('#users');
-var $data_for_download;
-var $current_user;
-var $myFile;
+function getLogGivenBooks(start_date,end_date,current_user){
 $.ajax({
-    type: "GET",
-    url: "/api/log/users/all",
-    success: function(users){
-      $.each(users, function(i, all_user){
-           $all_users.append('<option value='+all_user.id_user+'>'+all_user.Name+'</option>');
-       })
-       $current_user=$('#users').find(":selected").text();
-    }
-});
 
-$start_date = $('#start');
-$end_date = $('#end');
-$current_user=$('#users').val();
-console.log($current_user)
-$.ajax({
     type: "GET",
-    url: "/api/log/book/given/" + "1" +"?start_date="+$start_date.val() +"&end_date=" +$end_date.val(),
+    url: "/api/log/books/given/" + current_user + "?start_date="+start_date+"&end_date=" + end_date,
     success: function(data){
-    $data_for_download = data
-    console.log($data_for_download )
+      t.clear().draw();
       $.each(data, function(i, data_log){
               t.row.add( [
             data_log.Title,
@@ -138,17 +102,38 @@ $.ajax({
         ] ).draw( false );
        })
       table.reset();
-    $current_user=$('#users').val();
-    console.log($current_user)
+
     }
-
-
 });
+}
+
+
+$( document ).ready(function() {
+console.log( "document loaded" );
+
+var $all_users = $('#users');
+var $data_for_download;
+
+var $myFile;
+
+$.ajax({
+    type: "GET",
+    url: "/api/log/users/all",
+    success: function(users){
+      $.each(users, function(i, all_user){
+           $all_users.append('<option value='+all_user.id_user+'>'+all_user.Name+'</option>');
+       })
+       $current_user=$('#users').find(":selected").text();
+       console.log($('#users').val());
+       getLogGivenBooks($start_date.val(), $end_date.val(), $('#users').val())
+    }
+});
+
 
 $( "#json_button" ).click(function() {
   $.ajax({
     type: "GET",
-    url: "/api/log/book/given/" + $current_user +"?start_date="+$start_date.val() +"&end_date=" +$end_date.val(),
+    url: "/api/log/books/given/" + $('#users').val() +"?start_date="+$start_date.val() +"&end_date=" +$end_date.val(),
     dataType: 'binary',
     xhrFields: {
                 'responseType': 'blob'
@@ -163,73 +148,19 @@ $( "#json_button" ).click(function() {
      link.download = filename;
      link.click();
     }
+  });
 
 
 });
 
 
-});
 
-
-
-<!--$("#format_uploaded_file").on("change", function() {-->
-<!--var $myFile = $('#file_upload').prop('files');-->
-
-<!--console.log($myFile);-->
-<!--});-->
-
-<!--$("#upload_button").click(function() {-->
-<!--    var fd = new FormData();-->
-<!--    var $format = $('#format_uploaded_file').val('')-->
-<!--    var $myFile = $('#file_upload').prop('files');-->
-<!--    console.log($format)-->
-<!--    fd.append('file', $myFile); // since this is your file input-->
-<!--    console.log($format);-->
-<!--    $.ajax({-->
-<!--        url: "/api/log/book/upload?format=JSON",-->
-<!--        type: "post",-->
-<!--        dataType: 'json',-->
-<!--        processData: false,-->
-<!--        contentType: false,-->
-<!--        data: fd,-->
-<!--        success: function() {-->
-<!--        console.log("File added")-->
-<!--        }-->
-<!--    });-->
-<!--})-->
-
-
-
-$("#users").on("change", function() {
-      t.clear().draw();
-    $current_user = this.value;
-    console.log($current_user);
-    $.ajax({
-    type: "GET",
-    url: "/api/log/book/given/" + $current_user +"?start_date="+$start_date.val() +"&end_date=" +$end_date.val(),
-    success: function(data){
-
-      $.each(data, function(i, data_log){
-              t.row.add( [
-            data_log.Title,
-            data_log.action,
-            data_log.date_action,
-            data_log.id_book,
-            data_log.id_log,
-			data_log.id_user
-        ] ).draw( true );
-       })
-      table.reset();
-
-    }
-
-});
+$("#users, #start, #end").on("change", function() {
+    getLogGivenBooks($start_date.val(), $end_date.val(), $('#users').val())
 });
 
 
 });
-
-
 
 
 </script>

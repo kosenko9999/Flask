@@ -208,20 +208,6 @@ def add_new_user():
         return f"user {name} {surname} already exist", 400
 
 
-@app.route('/api/log/book/given/<int:id_user>', methods=['GET'])
-def get_log_given_books(id_user):
-    given_books = get_table_log(id_user, "Given", request.args.get("start_date"), request.args.get("end_date"))
-    serialized = []
-    for each in given_books:
-        serialized.append({
-            "id_book": each.id_book,
-            "date_action": each.date_action,
-            "id_user": each.id_user,
-            "action": each.action,
-            "Title": each.Title,
-            "id_log": each.id_log
-        })
-    return jsonify(serialized)
 
 # Клиенту была выдана книга
 @app.route('/api/log/book/given/<int:id_user>', methods=['POST'])
@@ -277,7 +263,24 @@ def accept_book_user(id_user):
     return jsonify(serialized)
 
 
-@app.route('/api/log/returned_book/<int:id_user>', methods=['GET'])
+#  Запросы для формирование журналов 
+@app.route('/api/log/books/given/<int:id_user>', methods=['GET'])
+def get_log_given_books(id_user):
+    given_books = get_table_log(id_user, "Given", request.args.get("start_date"), request.args.get("end_date"))
+    serialized = []
+    for each in given_books:
+        serialized.append({
+            "id_book": each.id_book,
+            "date_action": each.date_action,
+            "id_user": each.id_user,
+            "action": each.action,
+            "Title": each.Title,
+            "id_log": each.id_log
+        })
+    return jsonify(serialized)
+
+
+@app.route('/api/log/books/returned/<int:id_user>', methods=['GET'])
 def get_log_returned_books(id_user):
     returned_books = get_table_log(id_user, "Returned", request.args.get("start_date"), request.args.get("end_date"))
     serialized = []
@@ -352,32 +355,11 @@ def get_id_book():
         return "Book not found", 400
     else:
         serialized = {"id_book": book.id_book}
-        return jsonify(serialized), 200
-
-
-# Cтатистика кто больше всех вернул книг
-@app.route('/api/reports/users/given', methods=['GET'])
-def report_given_books_by_users():
-    conn = sqlite3.connect("test.db")
-    dframe = sql.read_sql("SELECT * FROM Log where date_action > '" + request.args.get("start_date")
-                                      + "' and date_action < '" + request.args.get("end_date")+"'", conn)
-    frame_given = dframe.loc[dframe['action'] == "Given"]
-    grouped_given = frame_given["action"].groupby(frame_given["id_user"]).count()
-    #grouped_returned = frame_given["action"].groupby(frame_given["id_user"]).count()
-    print(grouped_given)
-    result = grouped_given.to_json()
-    parsed = json.loads(result)
-    serialized = []
-    for key, value in parsed.items():
-        serialized.append({
-            "id_user": key,
-            "count": value
-        })
     return jsonify(serialized), 200
 
 
-# Cтатистика кто больше всех вернул книг
-@app.route('/api/reports/users/returned', methods=['GET'])
+# Запрос для формирование отчета
+@app.route('/api/reports', methods=['GET'])
 def report_returned_books_by_users():
     filter_column = request.args.get("filter_column")
     isascending = request.args.get("isascending")
@@ -388,12 +370,10 @@ def report_returned_books_by_users():
 
     grouped_given = dframe.groupby(["id_user", "Name", "Surname"], as_index=False)["action"].apply(lambda x: x[x == 'Given'].count())
     grouped_given.rename(columns={'action': 'count_given_book'}, inplace=True)
-
     grouped_returned = dframe.groupby(["id_user", "Name", "Surname"], as_index=False)["action"].apply(lambda x: x[x == 'Returned'].count())
     grouped_returned.rename(columns={'action': 'count_returned_book'}, inplace=True)
     grouped_returned["count_given_book"] = grouped_given["count_given_book"]
     sorted_dataframe = grouped_returned.sort_values(by=filter_column, ascending=eval(isascending))
-    print(sorted_dataframe)
     result = sorted_dataframe.to_json(orient="records")
     return jsonify(json.loads(result))
 
